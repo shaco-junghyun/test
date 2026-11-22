@@ -4,6 +4,7 @@
     "vercel": "^66.6.0"
   },
   "scripts": {
-    "promote": "bash scripts/promote.sh"
+    "promote": "bash scripts/promote.sh",
+    "test": "bun test"
   }
 }

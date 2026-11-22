@@ -1,4 +1,5 @@
-# PR마다 자동으로 도는 검사. 잡 이름(check)이 PR 화면과 룰셋에 표시되는 검사 이름이 된다.
+# PR마다 자동으로 도는 검사. 잡 이름(check, test)이 PR 화면과 main 룰셋의 필수 검사 이름이 된다.
+# 잡 이름을 바꾸면 룰셋도 같이 바꿔야 한다. 안 그러면 룰셋이 옛 이름의 결과를 영영 기다린다.
 name: CI
 
 on:
@@ -8,9 +9,23 @@ permissions:
   contents: read
 
 jobs:
+  # lint 역할: 셸 스크립트 정적 검사 (문법 오류 + 흔한 실수)
   check:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Shell syntax
-        run: bash -n scripts/promote.sh
+      - name: ShellCheck
+        run: |
+          shellcheck --version | head -2
+          shellcheck scripts/*.sh
+
+  # 테스트 역할: promote.sh 승격 규칙
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: oven-sh/setup-bun@v2
+        with:
+          bun-version: 1.4.4
+      - name: bun test
+        run: bun test
