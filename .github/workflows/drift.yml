@@ -1,0 +1,29 @@
+# coworkcity supabase-drift-check 흉내: 마이그레이션이 "대상 DB에 적용됐는지" 검사.
+# 여기서는 migrations/*.sql 이 migrations/applied.txt 에 적혀 있으면 적용된 것으로 본다.
+name: Drift
+
+on:
+  pull_request:
+    paths:
+      - "migrations/**"
+
+permissions:
+  contents: read
+
+jobs:
+  drift:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Migrations applied to target
+        run: |
+          shopt -s nullglob
+          missing=0
+          for f in migrations/*.sql; do
+            name=$(basename "$f")
+            if ! grep -qxF "$name" migrations/applied.txt 2>/dev/null; then
+              echo "::error file=$f::대상 DB에 적용되지 않은 마이그레이션: $name"
+              missing=1
+            fi
+          done
+          exit $missing
