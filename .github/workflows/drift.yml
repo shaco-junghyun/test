@@ -1,11 +1,13 @@
 # coworkcity supabase-drift-check 흉내: 마이그레이션이 "대상 DB에 적용됐는지" 검사.
 # 여기서는 migrations/*.sql 이 migrations/applied.txt 에 적혀 있으면 적용된 것으로 본다.
+#
+# 필수 검사라서 on.pull_request.paths 필터를 쓰지 않는다.
+# 필터를 쓰면 마이그레이션을 안 건드린 PR에서는 drift 결과가 아예 안 와서 머지가 영영 대기로 막힌다.
+# 대신 항상 실행하고, 이 PR이 마이그레이션을 바꾸지 않았으면 바로 통과한다.
 name: Drift
 
 on:
   pull_request:
-    paths:
-      - "migrations/**"
 
 permissions:
   contents: read
@@ -15,11 +17,24 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Migrations applied to target
+        with:
+          fetch-depth: 2 # PR 머지 커밋과 그 첫 부모(main)를 비교하려고
+      - name: Changed migrations
+        id: changed
         run: |
-          shopt -s nullglob
+          files=$(git diff --name-only HEAD^1 HEAD -- 'migrations/*.sql')
+          echo "$files"
+          if [[ -z "$files" ]]; then
+            echo "마이그레이션 변경 없음. 검사 생략." >> "$GITHUB_STEP_SUMMARY"
+            echo "any=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "any=true" >> "$GITHUB_OUTPUT"
+          fi
+      - name: Migrations applied to target
+        if: steps.changed.outputs.any == 'true'
+        run: |
           missing=0
-          for f in migrations/*.sql; do
+          for f in $(git diff --name-only --diff-filter=AM HEAD^1 HEAD -- 'migrations/*.sql'); do
             name=$(basename "$f")
             if ! grep -qxF "$name" migrations/applied.txt 2>/dev/null; then
               echo "::error file=$f::대상 DB에 적용되지 않은 마이그레이션: $name"
