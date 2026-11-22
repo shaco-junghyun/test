@@ -60,3 +60,4 @@ fi
 
 gh release create "$tag" --target "$sha" --title "$tag" --generate-notes
 echo "운영 배포 워크플로가 시작됩니다: gh run list --workflow deploy-production.yml"
+if true; then
