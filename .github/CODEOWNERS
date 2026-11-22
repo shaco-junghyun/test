@@ -1,9 +1,0 @@
-# 검사를 약하게 만들 수 있는 경로. 바뀐 PR에는 담당자가 리뷰어로 지정된다.
-# main 룰셋의 "Require review from Code Owners"가 켜져 있으면 담당자 승인 없이는 머지할 수 없다.
-# /.github/ 에 이 파일 자체도 들어 있어서, 이 파일을 지우거나 바꾸는 PR도 승인 대상이다.
-
-# CI·배포 워크플로, CODEOWNERS
-/.github/ @shaco-junghyun
-
-# 승격 스크립트와 그 테스트
-/scripts/ @shaco-junghyun
