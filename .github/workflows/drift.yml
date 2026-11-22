@@ -16,7 +16,7 @@ jobs:
   drift:
     runs-on: ubuntu-latest
     steps:
-      - uses: actions/checkout@v4
+      - uses: actions/checkout@v6
         with:
           fetch-depth: 2 # PR 머지 커밋과 그 첫 부모(main)를 비교하려고
       - name: Changed migrations
