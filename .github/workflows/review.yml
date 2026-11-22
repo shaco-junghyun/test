@@ -1,0 +1,47 @@
+# PR을 열 때와 push할 때마다 Claude가 리뷰 댓글을 단다. 머지를 막지 않는다(필수 검사로 등록하지 않음).
+# 기반: anthropics/claude-code-action docs/solutions.md "Automatic PR Code Review" 기본 예시.
+# 기본 동작상 쓰기 권한이 있는 사람이 연 PR에서만 돈다. 포크 PR은 아래 allow_fork_prs 로 끈다.
+name: Review
+
+on:
+  pull_request:
+    types: [opened, synchronize]
+
+jobs:
+  review:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      pull-requests: write
+      id-token: write
+    steps:
+      - uses: actions/checkout@v6
+        with:
+          fetch-depth: 1
+
+      - uses: anthropics/claude-code-action@v1
+        with:
+          anthropic_api_key: ${{ secrets.ANTHROPIC_API_KEY }}
+          allow_fork_prs: "false"
+          prompt: |
+            REPO: ${{ github.repository }}
+            PR NUMBER: ${{ github.event.pull_request.number }}
+
+            이 PR을 한국어로 리뷰해 줘. 아래 순서로 확인하고, 문제가 있을 때만 지적해.
+
+            1. CI가 약해졌는지
+               - .github/workflows/ 의 검사 명령이 빠지거나 항상 통과하게 바뀌었는지 (예: shellcheck → true)
+               - 테스트가 삭제되거나 건너뛰게 됐는지, 단언이 느슨해졌는지
+            2. 필수 검사 이름이 바뀌었는지
+               - main 룰셋은 잡 이름 check, test, drift 를 필수로 기다린다. 이 이름이 바뀌거나 사라지면 모든 PR이 막힌다
+               - 필수 검사 워크플로에 on.pull_request.paths 필터가 생기면 해당 경로를 안 건드린 PR이 막힌다
+            3. 배포가 위험해졌는지
+               - deploy-*.yml 의 트리거가 넓어졌는지, permissions 가 넓어졌는지, 비밀값이 출력될 수 있는지
+            4. 그 밖의 버그 (특히 scripts/promote.sh 의 승격 규칙)
+
+            Note: The PR branch is already checked out in the current working directory.
+            Use `gh pr comment` for top-level feedback. 문제가 없으면 "문제 없음"과 확인한 항목만 짧게 남겨.
+            Use `mcp__github_inline_comment__create_inline_comment` (with `confirmed: true`) to highlight specific code issues.
+            Only post GitHub comments - don't submit review text as messages.
+          claude_args: |
+            --allowedTools "mcp__github_inline_comment__create_inline_comment,Bash(gh pr comment:*),Bash(gh pr diff:*),Bash(gh pr view:*)"
