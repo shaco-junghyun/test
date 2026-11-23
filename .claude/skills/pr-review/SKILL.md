@@ -47,3 +47,8 @@ description: PR 자동 리뷰 기준. .github/workflows/review.yml 이 "/pr-revi
   ```
 
 - GitHub 댓글로만 남기고, 답변 메시지로 리뷰를 쓰지 않는다
+
+## 6. 최종 결과
+
+마지막에 `important`, `nit` 개수를 결과로 낸다. 요약 댓글에 쓴 개수와 같아야 한다.
+`important` 가 1 이상이면 이 PR은 머지가 막힌다. 그러니 Important는 1~4번에 해당하고 근거가 코드에 있을 때만 붙인다.
