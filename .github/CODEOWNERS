@@ -7,3 +7,6 @@
 
 # 승격 스크립트와 그 테스트
 /scripts/ @shaco-junghyun
+
+# 리뷰 기준(Claude 스킬·설정)
+/.claude/ @shaco-junghyun
