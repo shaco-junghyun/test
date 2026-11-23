@@ -2,13 +2,13 @@
 # 운영 승격: main의 한 커밋을 골라 다음 버전(YY.M.N) 릴리즈를 만든다.
 # 릴리즈가 게시되면 .github/workflows/deploy-production.yml 이 운영 배포를 한다.
 #
-# 사용법: bun run promote <sha> [--yes]
+# 사용법: bun run promote <sha> [--yes|--dry-run]
 set -euo pipefail
 
 sha_arg="${1:-}"
 assume_yes="${2:-}"
 if [[ -z "$sha_arg" ]]; then
-  echo "사용법: bun run promote <sha> [--yes]" >&2
+  echo "사용법: bun run promote <sha> [--yes|--dry-run]" >&2
   exit 1
 fi
 
@@ -51,6 +51,11 @@ echo "커밋:      $(git log -1 --format='%h %s' "$sha")"
 if [[ -n "$last_tag" ]]; then
   echo "지난 릴리즈 $last_tag 이후 나갈 커밋:"
   git log --format='  %h %s' "$last_tag..$sha"
+fi
+
+if [[ "$assume_yes" == "--dry-run" ]]; then
+  echo "[dry-run] 위 내용으로 릴리즈를 만들지 않고 끝냅니다."
+  exit 0
 fi
 
 if [[ "$assume_yes" != "--yes" ]]; then

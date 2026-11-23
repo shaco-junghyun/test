@@ -30,8 +30,8 @@ function commit(msg: string) {
   return git("rev-parse", "HEAD");
 }
 
-function promote(sha: string) {
-  return run(["bash", script, sha, "--yes"]);
+function promote(sha: string, flag = "--yes") {
+  return run(["bash", script, sha, flag]);
 }
 
 // promote.sh 와 같은 방식으로 이번 달(한국 시간) 접두어를 만든다. 예: 26.11
@@ -125,5 +125,16 @@ test("지난 릴리즈보다 뒤로 가는 커밋은 거절한다", () => {
 
   expect(r.code).toBe(1);
   expect(r.out).toContain("지난 승격");
+  expect(existsSync(ghLog)).toBe(false);
+});
+
+test("--dry-run은 다음 번호를 보여 주고 릴리즈를 만들지 않는다", () => {
+  const sha = commit("first");
+  git("push", "-q", "origin", "main");
+
+  const r = promote(sha, "--dry-run");
+
+  expect(r.code).toBe(0);
+  expect(r.out).toContain(`새 릴리즈: ${monthPrefix()}.1`);
   expect(existsSync(ghLog)).toBe(false);
 });
